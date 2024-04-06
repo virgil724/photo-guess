@@ -34,7 +34,7 @@
             v-for="item in getNumbersFromRangeWithSpecific(
               0,
               rowsLen - 1,
-              2,
+              choicesNum - 1,
               current
             )"
             @click="onClickAns($event, current, item)"
@@ -127,7 +127,7 @@ watchOnce(api, (api) => {
     current.value = api.selectedScrollSnap();
   });
 });
-const { sheetId } = defineProps(["sheetId"]);
+const { sheetId } = defineProps(["sheetId", "choicesNum"]);
 onMounted(async () => {
   const doc = new GoogleSpreadsheet(sheetId, {
     apiKey: "AIzaSyBnQiojmGBSD3IjmZxRaYsSQR_DjwdpJGg",

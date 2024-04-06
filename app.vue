@@ -11,6 +11,25 @@
             <div class="flex flex-col space-y-1.5">
               <Label for="name">Google Sheet URL</Label>
               <Input id="name" v-model="url" placeholder="Sheet URL" />
+              <FormField v-slot="{ componentField, value }" name="duration">
+                <FormItem>
+                  <FormLabel>選項數量</FormLabel>
+                  <FormControl>
+                    <Slider
+                      v-bind="componentField"
+                      v-model="choicesNum"
+                      :default-value="[3]"
+                      :max="10"
+                      :min="3"
+                    />
+                    <FormDescription class="flex justify-between">
+                      <span>希望答案有幾個選項</span>
+                      <span>{{ value?.[0] }} 個</span>
+                    </FormDescription>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
             </div>
           </div>
         </form>
@@ -27,7 +46,7 @@
           </CardContent>
         </ScrollArea></Card
       >
-      <PickUP :sheetId="sheetId" @guess-add="guessAdd" />
+      <PickUP :sheetId="sheetId" @guess-add="guessAdd" :choicesNum />
     </div>
   </div>
 </template>
@@ -36,9 +55,11 @@
 const url = ref("");
 const sheetId = ref("");
 const guessedPeople = ref([]);
+const choicesNum = ref([3]);
 const guessAdd = (item) => {
   guessedPeople.value.push(item);
 };
+
 const updateSheetId = () => {
   console.log("click");
   const re = RegExp("https:\/\/docs.google.com\/spreadsheets\/d\/(.+)\/.+");
