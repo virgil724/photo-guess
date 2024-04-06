@@ -5,17 +5,23 @@
         <CarouselContent>
           <CarouselItem v-for="(item, index) in rows" :key="index">
             <Card class="m-4">
-              <CardContent class="flex justify-center">
-                <img
-                  v-if="!item.error"
-                  class="mt-5"
-                  @error="errorLoadImg(index)"
-                  :src="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
-                />
-                <Button v-else class="mt-4" @click="retryLoadImg(index)"
-                  >Retry</Button
-                >
-              </CardContent>
+              <LargerPic
+                :picUrl="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
+              >
+                <CardContent class="flex justify-center">
+                  <img
+                    @click=""
+                    v-if="!item.error"
+                    class="mt-5"
+                    @error="errorLoadImg(index)"
+                    :src="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
+                  />
+
+                  <Button v-else class="mt-4" @click="retryLoadImg(index)"
+                    >Retry</Button
+                  >
+                </CardContent>
+              </LargerPic>
             </Card>
           </CarouselItem>
         </CarouselContent>
