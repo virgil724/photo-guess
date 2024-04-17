@@ -104,6 +104,29 @@ function shuffle(array) {
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
+const addOptions = (array) => {
+  for (let i = 0; i < array.length; i++) {
+    const choicesInd = getNumbersFromRangeWithSpecific(
+      0,
+      rowsLen.value - 1,
+      choicesNum[0] - 1,
+      i
+    );
+    const result = [];
+    choicesInd.forEach((index) => {
+      const item = array[index]; // Subtract 1 since array indices start from 0
+      if (item !== undefined) {
+        let ele = { opt: item.name, ans: false };
+        if (i == index) {
+          ele.ans = true;
+        }
+        result.push(ele);
+      }
+    });
+
+    array[i].options = result;
+  }
+};
 
 const errorLoadImg = (index) => {
   rows.value[index].error = true;
@@ -145,6 +168,7 @@ onMounted(async () => {
     };
   });
   shuffle(rows.value);
+  addOptions(rows.value);
 });
 </script>
 
