@@ -5,42 +5,42 @@
         <CarouselContent>
           <CarouselItem v-for="(item, index) in rows" :key="index">
             <Card class="m-4">
-              <LargerPic
-                :picUrl="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
-              >
-                <CardContent class="flex justify-center">
+              <CardContent class="flex justify-center">
+                <LargerPic
+                  :picUrl="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
+                  v-if="!item.error"
+                >
                   <img
-                    @click=""
-                    v-if="!item.error"
                     class="mt-5"
                     @error="errorLoadImg(index)"
                     :src="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
                   />
+                </LargerPic>
 
-                  <Button v-else class="mt-4" @click="retryLoadImg(index)"
-                    >Retry</Button
-                  >
-                </CardContent>
-              </LargerPic>
+                <Button v-else class="mt-4" @click="retryLoadImg(index)"
+                  >Retry</Button
+                >
+              </CardContent>
             </Card>
           </CarouselItem>
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />
         <div class="grid gap-2">
+          <!-- {{ rows[current].guessed }} -->
           <Button
             v-if="rows.length > 0"
+            :disabled="rows[current].guessed"
             class="px-15"
-            v-for="item in getNumbersFromRangeWithSpecific(
-              0,
-              rowsLen - 1,
-              choicesNum - 1,
-              current
-            )"
-            @click="onClickAns($event, current, item)"
-            :key="item + Math.random()"
-            >{{ rows[item].name }}</Button
+            :class="{
+              'bg-green-600': rows[current].name === item.opt && showAnswer,
+            }"
+            v-for="item in rows[current].options"
+            @click="onClickAns(current, item)"
+            :key="item + current"
+            >{{ item.opt }}</Button
           >
+          <Button @click="$emit('show-answer')">答案和分數</Button>
         </div>
       </Carousel>
     </CardContent>
@@ -52,20 +52,21 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 import type { CarouselApi } from "./components/ui/carousel";
 
 const rows = ref({});
-const emit = defineEmits(["guess-add"]);
-const onClickAns = (event, ans, click) => {
-  const targetElement = event.currentTarget;
-  if (ans === click) {
-    if (rows.value[ans].guessed === false) {
-      rows.value[ans].guessed = true;
-      emit("guess-add", { name: rows.value[ans].name });
-    }
-    targetElement.style.backgroundColor = "#16a34a";
-  } else {
-    targetElement.style.backgroundColor = "#dc2626";
+const emit = defineEmits(["guess-add","show-answer"]);
+const { sheetId, choicesNum, showAnswer } = defineProps([
+  "sheetId",
+  "choicesNum",
+  "showAnswer",
+]);
+
+const onClickAns = (ans, click) => {
+  console.log(rows.value[ans]);
+  if (rows.value[ans].guessed === false) {
+    rows.value[ans].guessed = true;
+    emit("guess-add", click);
   }
-  console.log(e);
 };
+
 const rowsLen = computed(() => rows.value.length);
 function getRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -137,7 +138,6 @@ const retryLoadImg = (index) => {
 const api = ref<CarouselApi>();
 
 function setApi(val: CarouselApi) {
-  console.log(val);
   api.value = val;
 }
 const current = ref();
@@ -150,7 +150,6 @@ watchOnce(api, (api) => {
     current.value = api.selectedScrollSnap();
   });
 });
-const { sheetId } = defineProps(["sheetId", "choicesNum"]);
 onMounted(async () => {
   const doc = new GoogleSpreadsheet(sheetId, {
     apiKey: "AIzaSyBnQiojmGBSD3IjmZxRaYsSQR_DjwdpJGg",

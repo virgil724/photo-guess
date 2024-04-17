@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen grid justify-center content-center gap-2">
+  <div class="h-full grid justify-center content-center gap-2">
     <Card v-if="!sheetId" class="w-[350px]">
       <CardHeader>
         <CardTitle>抽 抽</CardTitle>
@@ -38,28 +38,58 @@
         <Button @click="updateSheetId">抽</Button>
       </CardFooter>
     </Card>
+
     <div class="flex flex-row gap-12" v-else>
-      <Card class="w-[300px] p-4">
-        <ScrollArea class="h-[750px]">
-          <CardContent class="flex flex-col gap-2">
-            <Button v-for="item in guessedPeople"> {{ item.name }}</Button>
-          </CardContent>
-        </ScrollArea></Card
-      >
-      <PickUP :sheetId="sheetId" @guess-add="guessAdd" :choicesNum />
+      <Card class="w-[200px]" v-if="showAnswer">
+        <div class="flex flex-row">
+          <Card class="w-full m-4">
+            <CardHeader>
+              <CardTitle> Score </CardTitle>
+            </CardHeader>
+            <CardDescription></CardDescription>
+            <CardContent class="grid gap-4">
+              <div class="flex items-center space-x-4 rounded-md border p-4">
+                <div class="flex-1 space-y-1">
+                  <p class="text-xl font-medium text-green-600 text-center">
+                    {{ score }}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Card>
+      <PickUP
+        :sheetId="sheetId"
+        @guess-add="guessAdd"
+        :choicesNum
+        @show-answer="showAnswer = !showAnswer"
+        :showAnswer
+      />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import CardDescription from "./components/ui/card/CardDescription.vue";
+
 const url = ref("");
 const sheetId = ref("");
 const guessedPeople = ref([]);
 const choicesNum = ref([3]);
+const showAnswer = ref(false);
 const guessAdd = (item) => {
   guessedPeople.value.push(item);
 };
-
+const score = computed(() => {
+  let cnt = 0;
+  guessedPeople.value.forEach((e) => {
+    if (e.ans === true) {
+      cnt += 1;
+    }
+  });
+  return ` ${cnt}/${guessedPeople.value.length}`;
+});
 const updateSheetId = () => {
   console.log("click");
   const re = RegExp("https:\/\/docs.google.com\/spreadsheets\/d\/(.+)\/.+");
