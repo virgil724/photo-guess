@@ -34,6 +34,10 @@
             class="px-15"
             :class="{
               'bg-green-600': rows[current].name === item.opt && showAnswer,
+              'bg-red-600':
+                rows[current].name !== item.opt &&
+                showAnswer &&
+                rows[current].click === item,
             }"
             v-for="item in rows[current].options"
             @click="onClickAns(current, item)"
@@ -52,7 +56,7 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 import type { CarouselApi } from "./components/ui/carousel";
 
 const rows = ref({});
-const emit = defineEmits(["guess-add","show-answer"]);
+const emit = defineEmits(["guess-add", "show-answer"]);
 const { sheetId, choicesNum, showAnswer } = defineProps([
   "sheetId",
   "choicesNum",
@@ -63,6 +67,8 @@ const onClickAns = (ans, click) => {
   console.log(rows.value[ans]);
   if (rows.value[ans].guessed === false) {
     rows.value[ans].guessed = true;
+    rows.value[ans].click = click;
+
     emit("guess-add", click);
   }
 };
