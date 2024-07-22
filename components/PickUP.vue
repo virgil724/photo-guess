@@ -1,25 +1,20 @@
 <template>
   <Card>
     <CardContent>
-      <Carousel class="max-w-xs" @init-api="setApi">
+      <Carousel class="w-[600px]" @init-api="setApi">
         <CarouselContent>
           <CarouselItem v-for="(item, index) in rows" :key="index">
             <Card class="m-4">
               <CardContent class="flex justify-center">
-                <LargerPic
-                  :picUrl="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
-                  v-if="!item.error"
-                >
-                  <img
-                    class="mt-5"
-                    @error="errorLoadImg(index)"
-                    :src="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
-                  />
+                <LargerPic :picUrl="`https://image.virgil246.eu.org/?url=${item.imgUrl}`" v-if="!item.error">
+
+                  <div class="h-[600px] overflow-y-auto">
+                    <img class="mt-5   " @error="errorLoadImg(index)"
+                      :src="`https://image.virgil246.eu.org/?url=${item.imgUrl}`" />
+                  </div>
                 </LargerPic>
 
-                <Button v-else class="mt-4" @click="retryLoadImg(index)"
-                  >Retry</Button
-                >
+                <Button v-else class="mt-4" @click="retryLoadImg(index)">Retry</Button>
               </CardContent>
             </Card>
           </CarouselItem>
@@ -28,22 +23,14 @@
         <CarouselNext />
         <div class="grid gap-2">
           <!-- {{ rows[current].guessed }} -->
-          <Button
-            v-if="rows.length > 0"
-            :disabled="rows[current].guessed"
-            class="px-15"
-            :class="{
-              'bg-green-600': rows[current].name === item.opt && showAnswer,
-              'bg-red-600':
-                rows[current].name !== item.opt &&
-                showAnswer &&
-                rows[current].click === item,
-            }"
-            v-for="item in rows[current].options"
-            @click="onClickAns(current, item)"
-            :key="item + current"
-            >{{ item.opt }}</Button
-          >
+          <Button v-if="rows.length > 0" :disabled="rows[current].guessed" class="px-15" :class="{
+            'bg-green-600': rows[current].name === item.opt && showAnswer,
+            'bg-red-600':
+              rows[current].name !== item.opt &&
+              showAnswer &&
+              rows[current].click === item,
+          }" v-for="item in rows[current].options" @click="onClickAns(current, item)" :key="item + current">{{
+            item.opt }}</Button>
           <Button @click="$emit('show-answer')">答案和分數</Button>
         </div>
       </Carousel>
