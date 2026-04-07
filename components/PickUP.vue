@@ -13,6 +13,18 @@
 
       <!-- Game Carousel -->
       <Carousel v-else class="w-full" @init-api="setApi">
+        <!-- Countdown timer bar (timed mode only) -->
+        <div v-if="timerSeconds" class="flex items-center gap-2 mb-2">
+          <span class="text-sm tabular-nums text-muted-foreground">⏱ {{ countdown }}s</span>
+          <div class="flex-1 bg-muted rounded-full h-1.5">
+            <div
+              class="h-1.5 rounded-full transition-all duration-1000"
+              :class="countdown <= 5 ? 'bg-destructive' : 'bg-primary'"
+              :style="{ width: `${(countdown / timerSeconds) * 100}%` }"
+            />
+          </div>
+        </div>
+
         <!-- Progress Bar -->
         <div v-if="rows.length > 0" class="mb-3 px-1">
           <div class="flex justify-between text-xs text-muted-foreground mb-1">
@@ -83,11 +95,26 @@ import type { CarouselApi } from "./components/ui/carousel";
 const rows = ref([]);
 const loading = ref(true);
 const emit = defineEmits(["guess-add", "show-answer"]);
-const { sheetId, choicesNum, showAnswer } = defineProps([
+const { sheetId, choicesNum, showAnswer, timerSeconds, maxQuestions } = defineProps([
   "sheetId",
   "choicesNum",
   "showAnswer",
+  "timerSeconds",
+  "maxQuestions",
 ]);
+
+// Countdown timer
+const countdown = ref(timerSeconds ?? 0);
+
+const advance = () => {
+  countdown.value = timerSeconds;
+  api.value?.scrollNext();
+};
+
+const { resume } = useIntervalFn(() => {
+  countdown.value--;
+  if (countdown.value <= 0) advance();
+}, 1000, { immediate: false });
 
 const onClickAns = (ans, click) => {
   if (rows.value[ans].guessed === false) {
@@ -148,7 +175,10 @@ const current = ref<number | undefined>(undefined);
 watchOnce(api, (api) => {
   if (!api) return;
   current.value = api.selectedScrollSnap();
-  api.on("select", () => { current.value = api.selectedScrollSnap(); });
+  api.on("select", () => {
+    current.value = api.selectedScrollSnap();
+    if (timerSeconds) countdown.value = timerSeconds;
+  });
 });
 
 onMounted(async () => {
@@ -168,7 +198,9 @@ onMounted(async () => {
     };
   });
   shuffle(rows.value);
+  if (maxQuestions) rows.value = rows.value.slice(0, maxQuestions);
   addOptions(rows.value);
   loading.value = false;
+  if (timerSeconds) resume();
 });
 </script>

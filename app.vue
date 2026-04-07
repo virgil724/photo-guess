@@ -9,9 +9,28 @@
       <CardContent>
         <div class="grid items-center w-full gap-4">
           <div class="flex flex-col space-y-1.5">
-            <Label for="name">Google Sheet URL</Label>
-            <Input id="name" v-model="url" placeholder="Sheet URL" />
-            <FormField v-slot="{ componentField, value }" name="duration">
+            <Label for="url">Google Sheet URL</Label>
+            <Input id="url" v-model="url" placeholder="Sheet URL" />
+
+            <!-- Mode Toggle -->
+            <div class="flex flex-col space-y-1.5 pt-1">
+              <Label>模式</Label>
+              <div class="flex gap-2">
+                <Button
+                  :variant="mode === 'normal' ? 'default' : 'outline'"
+                  class="flex-1"
+                  @click="mode = 'normal'"
+                >一般</Button>
+                <Button
+                  :variant="mode === 'timed' ? 'default' : 'outline'"
+                  class="flex-1"
+                  @click="mode = 'timed'"
+                >限時作答</Button>
+              </div>
+            </div>
+
+            <!-- 選項數量 (both modes) -->
+            <FormField v-slot="{ componentField, value }" name="choices">
               <FormItem>
                 <FormLabel>選項數量</FormLabel>
                 <FormControl>
@@ -25,6 +44,27 @@
                   <FormDescription class="flex justify-between">
                     <span>希望答案有幾個選項</span>
                     <span>{{ value?.[0] }} 個</span>
+                  </FormDescription>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+
+            <!-- 題數 (timed mode only) -->
+            <FormField v-if="mode === 'timed'" v-slot="{ componentField, value }" name="count">
+              <FormItem>
+                <FormLabel>題數</FormLabel>
+                <FormControl>
+                  <Slider
+                    v-bind="componentField"
+                    v-model="questionCount"
+                    :default-value="[20]"
+                    :max="40"
+                    :min="5"
+                  />
+                  <FormDescription class="flex justify-between">
+                    <span>抽幾題</span>
+                    <span>{{ value?.[0] }} 題</span>
                   </FormDescription>
                 </FormControl>
                 <FormMessage />
@@ -61,6 +101,8 @@
         :choicesNum
         @show-answer="showAnswer = !showAnswer"
         :showAnswer
+        :timerSeconds="mode === 'timed' ? 30 : undefined"
+        :maxQuestions="mode === 'timed' ? questionCount[0] : undefined"
       />
     </div>
   </div>
@@ -73,7 +115,9 @@ const url = ref("");
 const sheetId = ref("");
 const guessedPeople = ref([]);
 const choicesNum = ref([3]);
+const questionCount = ref([20]);
 const showAnswer = ref(false);
+const mode = ref<'normal' | 'timed'>('normal');
 
 const guessAdd = (item) => {
   guessedPeople.value.push(item);
