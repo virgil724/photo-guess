@@ -109,10 +109,12 @@ const advance = () => {
   api.value?.scrollNext();
 };
 
-const { resume } = useIntervalFn(() => {
+const { resume, pause } = useIntervalFn(() => {
   countdown.value--;
   if (countdown.value <= 0) advance();
 }, 1000, { immediate: false });
+
+watch(() => showAnswer, (val) => { if (val && timerSeconds) pause(); });
 
 const canGoBack = computed(() =>
   !timerSeconds || showAnswer || rows.value.every(r => r.guessed)
