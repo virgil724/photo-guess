@@ -61,7 +61,7 @@
           </CarouselItem>
         </CarouselContent>
 
-        <CarouselPrevious />
+        <CarouselPrevious :disabled="!canGoBack" />
         <CarouselNext />
 
         <!-- Answer Buttons -->
@@ -69,13 +69,11 @@
           <Button
             v-for="item in rows[current].options"
             :key="item.opt + current"
-            :disabled="rows[current].guessed"
-            class="w-full transition-all duration-150"
+            class="w-full transition-all duration-150 hover:scale-[1.01]"
             :class="{
               'bg-green-600 hover:bg-green-700 text-white': rows[current].name === item.opt && showAnswer,
               'bg-red-600 hover:bg-red-700 text-white': rows[current].name !== item.opt && showAnswer && rows[current].click === item,
-              'opacity-50 cursor-not-allowed': rows[current].guessed && rows[current].click !== item && !(rows[current].name === item.opt && showAnswer),
-              'hover:scale-[1.01]': !rows[current].guessed,
+              'ring-2 ring-primary': rows[current].click === item && !showAnswer,
             }"
             @click="onClickAns(current, item)"
           >
@@ -116,12 +114,14 @@ const { resume } = useIntervalFn(() => {
   if (countdown.value <= 0) advance();
 }, 1000, { immediate: false });
 
+const canGoBack = computed(() =>
+  !timerSeconds || showAnswer || rows.value.every(r => r.guessed)
+);
+
 const onClickAns = (ans, click) => {
-  if (rows.value[ans].guessed === false) {
-    rows.value[ans].guessed = true;
-    rows.value[ans].click = click;
-    emit("guess-add", click);
-  }
+  rows.value[ans].guessed = true;
+  rows.value[ans].click = click;
+  emit("guess-add", { index: ans, item: click });
 };
 
 const rowsLen = computed(() => rows.value.length);
@@ -174,9 +174,16 @@ function setApi(val: CarouselApi) { api.value = val; }
 const current = ref<number | undefined>(undefined);
 watchOnce(api, (api) => {
   if (!api) return;
-  current.value = api.selectedScrollSnap();
+  let prev = api.selectedScrollSnap();
+  current.value = prev;
   api.on("select", () => {
-    current.value = api.selectedScrollSnap();
+    const next = api.selectedScrollSnap();
+    if (timerSeconds && !canGoBack.value && next < prev) {
+      api.scrollTo(prev);
+      return;
+    }
+    prev = next;
+    current.value = next;
     if (timerSeconds) countdown.value = timerSeconds;
   });
 });

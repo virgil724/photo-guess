@@ -113,19 +113,20 @@ import CardDescription from "./components/ui/card/CardDescription.vue";
 
 const url = ref("");
 const sheetId = ref("");
-const guessedPeople = ref([]);
+const guessedPeople = ref<Record<number, any>>({});
 const choicesNum = ref([3]);
 const questionCount = ref([20]);
 const showAnswer = ref(false);
 const mode = ref<'normal' | 'timed'>('normal');
 
-const guessAdd = (item) => {
-  guessedPeople.value.push(item);
+const guessAdd = ({ index, item }) => {
+  guessedPeople.value[index] = item;
 };
 
 const score = computed(() => {
-  const cnt = guessedPeople.value.filter((e) => e.ans === true).length;
-  return `${cnt}/${guessedPeople.value.length}`;
+  const answered = Object.values(guessedPeople.value);
+  const cnt = answered.filter((e) => e.ans === true).length;
+  return `${cnt}/${answered.length}`;
 });
 
 const updateSheetId = () => {
