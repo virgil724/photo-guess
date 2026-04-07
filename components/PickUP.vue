@@ -1,37 +1,75 @@
 <template>
-  <Card>
-    <CardContent>
-      <Carousel class="w-[600px]" @init-api="setApi">
+  <Card class="w-full max-w-2xl">
+    <CardContent class="pt-4">
+      <!-- Loading Skeleton -->
+      <div v-if="loading" class="animate-pulse space-y-4 p-4">
+        <div class="bg-muted rounded-lg h-[400px] w-full" />
+        <div class="space-y-2 mt-4">
+          <div class="bg-muted rounded h-10 w-full" />
+          <div class="bg-muted rounded h-10 w-full" />
+          <div class="bg-muted rounded h-10 w-full" />
+        </div>
+      </div>
+
+      <!-- Game Carousel -->
+      <Carousel v-else class="w-full" @init-api="setApi">
+        <!-- Progress Bar -->
+        <div v-if="rows.length > 0" class="mb-3 px-1">
+          <div class="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>第 {{ (current ?? 0) + 1 }} 題</span>
+            <span>共 {{ rows.length }} 題</span>
+          </div>
+          <div class="w-full bg-muted rounded-full h-1.5">
+            <div
+              class="bg-primary h-1.5 rounded-full transition-all duration-300"
+              :style="{ width: `${(((current ?? 0) + 1) / rows.length) * 100}%` }"
+            />
+          </div>
+        </div>
+
         <CarouselContent>
           <CarouselItem v-for="(item, index) in rows" :key="index">
-            <Card class="m-4">
-              <CardContent class="flex justify-center">
+            <Card class="m-2">
+              <CardContent class="flex justify-center p-4">
                 <LargerPic :picUrl="`https://image.virgil246.eu.org/?url=${item.imgUrl}`" v-if="!item.error">
-
-                  <div class="h-[600px] overflow-y-auto">
-                    <img class="mt-5   " @error="errorLoadImg(index)"
-                      :src="`https://image.virgil246.eu.org/?url=${item.imgUrl}`" />
+                  <div class="relative group cursor-zoom-in max-h-[60vh] overflow-y-auto">
+                    <img
+                      class="mt-2 w-full object-contain"
+                      @error="errorLoadImg(index)"
+                      :src="`https://image.virgil246.eu.org/?url=${item.imgUrl}`"
+                    />
+                    <span class="absolute bottom-2 right-2 text-xs bg-black/50 text-white px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      點擊放大
+                    </span>
                   </div>
                 </LargerPic>
-
                 <Button v-else class="mt-4" @click="retryLoadImg(index)">Retry</Button>
               </CardContent>
             </Card>
           </CarouselItem>
         </CarouselContent>
+
         <CarouselPrevious />
         <CarouselNext />
-        <div class="grid gap-2">
-          <!-- {{ rows[current].guessed }} -->
-          <Button v-if="rows.length > 0" :disabled="rows[current].guessed" class="px-15" :class="{
-            'bg-green-600': rows[current].name === item.opt && showAnswer,
-            'bg-red-600':
-              rows[current].name !== item.opt &&
-              showAnswer &&
-              rows[current].click === item,
-          }" v-for="item in rows[current].options" @click="onClickAns(current, item)" :key="item + current">{{
-            item.opt }}</Button>
-          <Button @click="$emit('show-answer')">答案和分數</Button>
+
+        <!-- Answer Buttons -->
+        <div class="grid gap-2 mt-3" v-if="rows.length > 0 && current != null">
+          <Button
+            v-for="item in rows[current].options"
+            :key="item.opt + current"
+            :disabled="rows[current].guessed"
+            class="w-full transition-all duration-150"
+            :class="{
+              'bg-green-600 hover:bg-green-700 text-white': rows[current].name === item.opt && showAnswer,
+              'bg-red-600 hover:bg-red-700 text-white': rows[current].name !== item.opt && showAnswer && rows[current].click === item,
+              'opacity-50 cursor-not-allowed': rows[current].guessed && rows[current].click !== item && !(rows[current].name === item.opt && showAnswer),
+              'hover:scale-[1.01]': !rows[current].guessed,
+            }"
+            @click="onClickAns(current, item)"
+          >
+            {{ item.opt }}
+          </Button>
+          <Button variant="outline" class="w-full mt-1" @click="$emit('show-answer')">答案和分數</Button>
         </div>
       </Carousel>
     </CardContent>
@@ -42,7 +80,8 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import type { CarouselApi } from "./components/ui/carousel";
 
-const rows = ref({});
+const rows = ref([]);
+const loading = ref(true);
 const emit = defineEmits(["guess-add", "show-answer"]);
 const { sheetId, choicesNum, showAnswer } = defineProps([
   "sheetId",
@@ -51,44 +90,25 @@ const { sheetId, choicesNum, showAnswer } = defineProps([
 ]);
 
 const onClickAns = (ans, click) => {
-  console.log(rows.value[ans]);
   if (rows.value[ans].guessed === false) {
     rows.value[ans].guessed = true;
     rows.value[ans].click = click;
-
     emit("guess-add", click);
   }
 };
 
 const rowsLen = computed(() => rows.value.length);
-function getRandomNumber(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-function getNumbersFromRangeWithSpecific(
-  min,
-  max,
-  numOfChoices,
-  specificNumber
-) {
-  // Create an array with all numbers in the range
+
+function getNumbersFromRangeWithSpecific(min, max, numOfChoices, specificNumber) {
   const numbers = Array.from({ length: max - min + 1 }, (_, i) => i + min);
-
-  // Remove the specificNumber from the array if it's in the range
   const remainingNumbers = numbers.filter((num) => num !== specificNumber);
-
-  // Get random choices from the remaining numbers
   const randomChoices = [];
   for (let i = 0; i < numOfChoices; i++) {
     const randomIndex = Math.floor(Math.random() * remainingNumbers.length);
-    const randomNumber = remainingNumbers[randomIndex];
-    randomChoices.push(randomNumber);
+    randomChoices.push(remainingNumbers[randomIndex]);
     remainingNumbers.splice(randomIndex, 1);
   }
-
-  // Add the specificNumber to the randomChoices array
   randomChoices.push(specificNumber);
-
-  // Shuffle the array and return
   return randomChoices.sort(() => Math.random() - 0.5);
 }
 
@@ -98,6 +118,7 @@ function shuffle(array) {
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
+
 const addOptions = (array) => {
   for (let i = 0; i < array.length; i++) {
     const choicesInd = getNumbersFromRangeWithSpecific(
@@ -108,41 +129,28 @@ const addOptions = (array) => {
     );
     const result = [];
     choicesInd.forEach((index) => {
-      const item = array[index]; // Subtract 1 since array indices start from 0
+      const item = array[index];
       if (item !== undefined) {
-        let ele = { opt: item.name, ans: false };
-        if (i == index) {
-          ele.ans = true;
-        }
-        result.push(ele);
+        result.push({ opt: item.name, ans: i === index });
       }
     });
-
     array[i].options = result;
   }
 };
 
-const errorLoadImg = (index) => {
-  rows.value[index].error = true;
-};
-const retryLoadImg = (index) => {
-  rows.value[index].error = false;
-};
-const api = ref<CarouselApi>();
+const errorLoadImg = (index) => { rows.value[index].error = true; };
+const retryLoadImg = (index) => { rows.value[index].error = false; };
 
-function setApi(val: CarouselApi) {
-  api.value = val;
-}
-const current = ref();
+const api = ref<CarouselApi>();
+function setApi(val: CarouselApi) { api.value = val; }
+
+const current = ref<number | undefined>(undefined);
 watchOnce(api, (api) => {
   if (!api) return;
-
   current.value = api.selectedScrollSnap();
-
-  api.on("select", () => {
-    current.value = api.selectedScrollSnap();
-  });
+  api.on("select", () => { current.value = api.selectedScrollSnap(); });
 });
+
 onMounted(async () => {
   const doc = new GoogleSpreadsheet(sheetId, {
     apiKey: "AIzaSyBnQiojmGBSD3IjmZxRaYsSQR_DjwdpJGg",
@@ -161,7 +169,6 @@ onMounted(async () => {
   });
   shuffle(rows.value);
   addOptions(rows.value);
+  loading.value = false;
 });
 </script>
-
-<style></style>

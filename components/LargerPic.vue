@@ -2,7 +2,7 @@
   <AlertDialog>
     <AlertDialogTrigger as-child>
       <slot>
-        <Button variant="outline"> Show Dialog </Button>
+        <Button variant="outline">Show Dialog</Button>
       </slot>
     </AlertDialogTrigger>
     <AlertDialogContent>
@@ -12,7 +12,7 @@
         </div>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel>關閉 </AlertDialogCancel>
+        <AlertDialogCancel>關閉</AlertDialogCancel>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
@@ -24,11 +24,9 @@ import VueMagnifier from "@websitebeaver/vue-magnifier";
 import "@websitebeaver/vue-magnifier/styles.css";
 </script>
 
-<style>
+<style scoped>
 .img-container {
-
-  height: 600px;
+  max-height: 70vh;
   overflow-y: scroll;
-
 }
 </style>

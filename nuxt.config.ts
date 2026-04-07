@@ -16,8 +16,8 @@ export default defineNuxtConfig({
   ssr: false,
   devServer: {
     https: {
-      key: 'C:/Users/virgi/rootCA/ca.key',
-      cert: 'C:/Users/virgi/rootCA/ca.crt'
+      key: './localhost-key.pem',
+      cert: './localhost.pem'
     }
   }
 })
