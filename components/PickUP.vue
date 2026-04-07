@@ -69,15 +69,15 @@
           <Button
             v-for="item in rows[current].options"
             :key="item.opt + current"
+            :variant="!showAnswer && rows[current].click === item ? 'default' : 'outline'"
             class="w-full transition-all duration-150 hover:scale-[1.01]"
             :class="{
-              'bg-green-600 hover:bg-green-700 text-white': rows[current].name === item.opt && showAnswer,
-              'bg-red-600 hover:bg-red-700 text-white': rows[current].name !== item.opt && showAnswer && rows[current].click === item,
-              'ring-2 ring-primary': rows[current].click === item && !showAnswer,
+              'bg-green-600 hover:bg-green-700 border-green-600 text-white': rows[current].name === item.opt && showAnswer,
+              'bg-red-600 hover:bg-red-700 border-red-600 text-white': rows[current].name !== item.opt && showAnswer && rows[current].click === item,
             }"
             @click="onClickAns(current, item)"
           >
-            {{ item.opt }}
+            <span v-if="rows[current].click === item && !showAnswer" class="mr-1">✓</span>{{ item.opt }}
           </Button>
           <Button variant="outline" class="w-full mt-1" @click="$emit('show-answer')">答案和分數</Button>
         </div>
